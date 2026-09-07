@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+
+  /* ====================================================================
+     HOW TO CUSTOMIZE THIS PAGE — read this before sending it anywhere
+     ====================================================================
+     1. Scroll down to the <script> section at the bottom of this file.
+     2. Set HER_NAME and HER_BIRTHDAY (month + day) in the CONFIG block.
+     3. Replace each entry in the MEMORIES array with your own photo and
+        a short caption. You can use:
+          - a photo hosted online (paste the direct image URL), or
+          - a local file if you upload this page + photos to the same
+            folder on a host (e.g. "photos/1.jpg").
+     4. Host the file anywhere (Netlify, Vercel, GitHub Pages, or even
+        a private link) and send her the link. That's it.
+     ==================================================================== */
+
+  * { box-sizing: border-box; }
+
+  :root{
+    --ink:      #f3ede3;
+    --ink-dim:  #cfc6b8;
+    --night-1:  #11101c;
+    --night-2:  #1a1830;
+    --rose:     #e4a6a0;
+    --rose-dim: #b57e78;
+    --gold:     #cda86a;
+    --paper:    #f6f1e8;
+    --paper-ink:#2c2620;
+  }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at 50% -10%, #232042 0%, var(--night-1) 55%, #0a0913 100%);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    overflow-x:hidden;
+  }
+
+  #stars{
+    position: fixed; inset:0; z-index:0; pointer-events:none;
+  }
+  #stars span{
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background: var(--ink); opacity:.5;
+    animation: twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{opacity:.15} 50%{opacity:.85} }
+
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh; width:100%;
+    display:flex; align-items:center; justify-content:center;
+    padding: 6vh 6vw;
+  }
+
+  /* ---------- Screen 1: gate ---------- */
+  #gate{
+    width:100%; max-width:420px;
+    text-align:center;
+  }
+  .eyebrow{
+    font-size:13px; letter-spacing:.14em; color: var(--gold);
+    margin: 0 0 10px;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500; font-size:44px; line-height:1.15;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  h1 em{ font-style:italic; color: var(--rose); }
+  .sub{
+    font-size:15px; color: var(--ink-dim); line-height:1.6;
+    margin: 0 0 40px;
+  }
+
+  .field-label{
+    display:block; text-align:left; font-size:12px;
+    letter-spacing:.08em; color: var(--ink-dim); margin: 0 0 8px 4px;
+  }
+  .date-row{ display:flex; gap:10px; margin-bottom:14px; }
+  select, .unlock-btn{
+    -webkit-appearance:none; appearance:none;
+    font-family:'Jost', sans-serif; font-size:16px;
+    border-radius: 3px;
+  }
+  select{
+    flex:1; padding: 14px 16px;
+    background: rgba(243,237,227,0.06);
+    border: 1px solid rgba(243,237,227,0.22);
+    color: var(--ink);
+  }
+  select:focus{ outline:none; border-color: var(--rose); }
+  select option{ background: var(--night-2); color: var(--ink); }
+
+  .unlock-btn{
+    width:100%; margin-top: 22px;
+    padding: 15px 20px;
+    background: var(--rose);
+    color: #2c1614;
+    border:none; font-weight:500; letter-spacing:.03em;
+    cursor:pointer;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .unlock-btn:active{ transform: scale(0.98); }
+  .unlock-btn:hover{ background:#eeb4ae; }
+
+  #error-msg{
+    font-size:13px; color: var(--rose-dim); margin-top:14px; height:16px;
+    opacity:0; transition: opacity .2s ease;
+  }
+  #error-msg.show{ opacity:1; }
+
+  /* ---------- Transition ---------- */
+  #unlocking{
+    position:fixed; inset:0; z-index:5;
+    display:none; align-items:center; justify-content:center;
+    background: var(--night-1);
+  }
+  #unlocking.show{ display:flex; }
+  .heart-line{
+    font-family:'Cormorant Garamond', serif; font-style:italic;
+    font-size:22px; color: var(--rose);
+    opacity:0; animation: fadeInOut 1.8s ease forwards;
+  }
+  @keyframes fadeInOut{
+    0%{ opacity:0; transform: translateY(6px); }
+    30%,70%{ opacity:1; transform: translateY(0); }
+    100%{ opacity:0; }
+  }
+
+  /* ---------- Screen 2: gallery ---------- */
+  #gallery{
+    display:none;
+    width:100%; max-width:480px;
+    flex-direction:column; align-items:center;
+  }
+  #gallery.show{ display:flex; }
+
+  .gallery-head{ text-align:center; margin-bottom: 22px; }
+  .gallery-head h2{
+    font-family:'Cormorant Garamond', serif; font-weight:500;
+    font-size:28px; margin:0 0 4px; color: var(--ink);
+  }
+  .gallery-head p{ font-size:13px; color: var(--ink-dim); margin:0; }
+
+  .frame{
+    position:relative;
+    width:100%; aspect-ratio: 4/5;
+    background: var(--paper);
+    border-radius: 4px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    overflow:hidden;
+    padding: 14px 14px 60px;
+  }
+  .frame img{
+    width:100%; height:100%;
+    object-fit: cover;
+    display:block;
+    border-radius: 2px;
+    background: #ddd4c4;
+  }
+  .caption{
+    position:absolute; left:0; right:0; bottom:0;
+    padding: 12px 18px 16px;
+    font-family:'Cormorant Garamond', serif; font-style:italic;
+    font-size:16px; color: var(--paper-ink);
+    text-align:center;
+  }
+
+  .controls{
+    display:flex; align-items:center; justify-content:center;
+    gap: 22px; margin-top: 22px; width:100%;
+  }
+  .nav-btn{
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid rgba(243,237,227,0.25);
+    background: rgba(243,237,227,0.05);
+    color: var(--ink); font-size:18px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition: background .2s ease;
+  }
+  .nav-btn:hover{ background: rgba(243,237,227,0.14); }
+  .nav-btn:disabled{ opacity:.25; cursor:default; }
+
+  .dots{ display:flex; gap:6px; }
+  .dot{
+    width:6px; height:6px; border-radius:50%;
+    background: rgba(243,237,227,0.25);
+    transition: background .2s ease, transform .2s ease;
+  }
+  .dot.active{ background: var(--rose); transform: scale(1.3); }
+
+  .count{ font-size:12px; color: var(--ink-dim); margin-top:16px; letter-spacing:.05em; }
+
+  @media (max-width: 380px){
+    h1{ font-size:36px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div class="stage">
+
+  <!-- SCREEN 1: birthday gate -->
+  <div id="gate">
+    <p class="eyebrow">a little something for you</p>
+    <h1 id="gate-title">Happy birthday, <em>love</em></h1>
+    <p class="sub">Before you get to it — enter your birthday, and I'll open up a little piece of us.</p>
+
+    <span class="field-label">Your birthday</span>
+    <div class="date-row">
+      <select id="sel-month" aria-label="Birth month"></select>
+      <select id="sel-day" aria-label="Birth day"></select>
+    </div>
+
+    <button class="unlock-btn" id="unlock-btn">Unlock our memories</button>
+    <p id="error-msg">That's not quite the date I was hoping for — try again?</p>
+  </div>
+
+  <!-- TRANSITION -->
+  <div id="unlocking">
+    <p class="heart-line" id="unlock-line">opening our memory lane…</p>
+  </div>
+
+  <!-- SCREEN 2: gallery -->
+  <div id="gallery">
+    <div class="gallery-head">
+      <h2 id="gallery-title">Us, lately</h2>
+      <p id="gallery-sub">every one of these made me smile again just now</p>
+    </div>
+
+    <div class="frame">
+      <img id="photo-img" src="" alt="A shared memory">
+      <p class="caption" id="photo-caption"></p>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" id="btn-prev" aria-label="Previous photo">‹</button>
+      <div class="dots" id="dots"></div>
+      <button class="nav-btn" id="btn-next" aria-label="Next photo">›</button>
+    </div>
+    <p class="count" id="counter"></p>
+  </div>
+
+</div>
+
+<script>
+/* =======================================================================
+   CONFIG — edit everything in this block
+   ======================================================================= */
+
+const HER_NAME     = "love";      // shown as "Happy birthday, {name}"
+const BIRTH_MONTH  = 9;           // 1 = Jan ... 12 = Dec
+const BIRTH_DAY    = 7;          // 1-31
+
+// Add / replace as many memories as you like, in order.
+// "src" can be any image URL, or a local filename if hosted alongside this page.
+const MEMORIES = [
+  { src: "Photos/1_Start_page.jpeg", caption: "Get Ready! ✈️✨" },
+  { src: "Photos/2_Bokya_Welcome.jpeg", caption: "Bokya Welcome" },
+  { src: "Photos/3_First_Date_photo.jpeg", caption: "Our first ever Date photo 👩‍❤️‍👨✨" },
+  { src: "Photos/4. Second Date.jpeg", caption: "Our Second Date photo 🌹🥂" },
+  { src: "Photos/5 Cutipie.jpeg", caption: "Bokya ani mi sobat 🐱👩‍❤️‍👨" },
+  { src: "Photos/6 Cutipie.jpeg", caption: "Haaye haaye to look bhag.. 👀🔥😍" },
+  { src: "Photos/7 legendary wallpaper.jpeg", caption: "Our whatsapp legendary wallpaper.. 📱💖" },
+  { src: "Photos/8 My FV.jpeg", caption: "My FV photo for always.. ⭐🥰" },
+  { src: "Photos/9 Romanticity.jpeg", caption: "Get ready for aple romanticity photos, aaju baaju la koni nahi na?" },
+  { src: "Photos/10 Romanticity.jpeg", caption: "Vo bhi kya din the 🥹💞" },
+  { src: "Photos/11 Romanticity.jpeg", caption: "Smooch 🫂🤗😘" },
+  { src: "Photos/12 Romanticity.jpeg", caption: "Haye hayee kissi💋" },
+  { src: "Photos/13 Romanticity.jpeg", caption: "Mahabaleshwar trip 🫂🤗" },
+  { src: "Photos/14  romanticity4.jpeg", caption: "Maaja baacha❤️" },
+  { src: "Photos/15  jodi sbohte ka.jpeg", caption: "Shobte na jodi sobat✨" },
+  { src: "Photos/16 Best mahabaleshwar trip.jpeg", caption: "Best mahabaleshwar trip✈️ " },
+  { src: "Photos/17 first Mirror Dump.jpeg", caption: "First Mirror Dump 🪞📸" },
+  { src: "Photos/18 Sunadri.jpeg", caption: "Kya main sundar hoon? 🥺👉👈" },
+  { src: "Photos/19 Sunadri.jpeg", caption: "Saachi Saachi batao sundar hu? 🙈✨" },
+  { src: "Photos/20 Sunadri.jpeg", caption: "Haa bahoot! 😍💖" },
+  { src: "Photos/21 Sunadri.jpeg", caption: "Yee dekho apki sundarta 🤌🌸" },
+  { src: "Photos/22 Sunadri.jpeg", caption: "Dekha kaisa laga? 😏✨" },
+  { src: "Photos/23 Sunadri.jpeg", caption: "Yee deko sundarta 👑💖" },
+  { src: "Photos/25 Sunadri.jpeg", caption: "Lady Don hu mai 🕶️😎" },
+  { src: "Photos/24 Sunadri.jpeg", caption: "Hoo na sundar, batao? 🤭❤️" },
+  { src: "Photos/26 Sunadri.jpeg", caption: "Haaye meri sundari in saree 🔥😍" },
+  { src: "Photos/27 Sunadri.jpeg", caption: "Hoo to tum sundar, koi doubt nahi! 💯🥰" },
+  { src: "Photos/28 . Together photos.jpeg", caption: "Sobat che photos 📸❤️" },
+  { src: "Photos/29. Together Photos.jpeg", caption: "Bokya 🐾🥰" },
+  { src: "Photos/30. Together Photos.jpeg", caption: "cutipie 🤗" },
+  { src: "Photos/31. Together Photos.jpeg", caption: "nazar na laage 🧿❤️" },
+  { src: "Photos/32. Together Photos.jpeg", caption: "Majhii cutie 💕" },
+  { src: "Photos/33. Together Photos.jpeg", caption: "Tu saath hai toh sab kuch perfect hai 💖" },
+  { src: "Photos/35 Together Photos.jpeg", caption: "Tujhya sobat khup happy & vatat 🌸" },
+  { src: "Photos/36 Together Photos.jpeg", caption: "Bas tu aani mi 🌸" },
+  { src: "Photos/37 Together Photos.jpeg", caption: "khas moments 🌸" },
+  { src: "Photos/38 Birthday.jpeg", caption: "Last Birthday celebration 🎂🎉🥳" },
+  { src: "Photos/39 trip photos.jpeg", caption: "trip photos 🎒🌄" },
+  { src: "Photos/40 trip 1", caption: "Malshej Trip✈️" },
+  { src: "Photos/40 trip.jpeg", caption: "Mahabaleshwar trip✈️" },
+  { src: "Photos/41 trip.jpeg", caption: "Mahabaleshwar trip✈️" },
+  { src: "Photos/42 trip.jpeg", caption: "Alibaug trip✈️ " },
+  { src: "Photos/43 trip.jpeg", caption: "Ujjain Trip✈️" },
+  { src: "Photos/44 trip.jpeg", caption: "Ujjain Trip✈️" },
+  { src: "Photos/45 trip.jpeg", caption: "Ujjain Trip✈️" }
+];
+/* ======================================================================= */
+
+document.getElementById('gate-title').innerHTML =
+  `Happy birthday, <em>${HER_NAME}</em>`;
+
+// stars background
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('span');
+  s.style.left = Math.random()*100 + '%';
+  s.style.top = Math.random()*100 + '%';
+  s.style.animationDelay = (Math.random()*3.5) + 's';
+  starsEl.appendChild(s);
+}
+
+// populate month/day selects
+const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const selMonth = document.getElementById('sel-month');
+const selDay = document.getElementById('sel-day');
+
+monthNames.forEach((m, i) => {
+  const opt = document.createElement('option');
+  opt.value = i+1; opt.textContent = m;
+  selMonth.appendChild(opt);
+});
+selMonth.value = "";
+selMonth.selectedIndex = -1;
+{
+  const placeholder = document.createElement('option');
+  placeholder.value = ""; placeholder.textContent = "Month"; placeholder.disabled = true; placeholder.selected = true;
+  selMonth.insertBefore(placeholder, selMonth.firstChild);
+}
+
+function fillDays(){
+  selDay.innerHTML = "";
+  const ph = document.createElement('option');
+  ph.value=""; ph.textContent="Day"; ph.disabled=true; ph.selected=true;
+  selDay.appendChild(ph);
+  for (let d=1; d<=31; d++){
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    selDay.appendChild(opt);
+  }
+}
+fillDays();
+
+// unlock logic
+const errorMsg = document.getElementById('error-msg');
+document.getElementById('unlock-btn').addEventListener('click', () => {
+  const m = parseInt(selMonth.value, 10);
+  const d = parseInt(selDay.value, 10);
+
+  if (!m || !d){
+    errorMsg.textContent = "Pick a month and a day first.";
+    errorMsg.classList.add('show');
+    return;
+  }
+
+  if (m === BIRTH_MONTH && d === BIRTH_DAY){
+    errorMsg.classList.remove('show');
+    playUnlock();
+  } else {
+    errorMsg.textContent = "That's not quite the date I was hoping for — try again?";
+    errorMsg.classList.add('show');
+  }
+});
+
+function playUnlock(){
+  document.getElementById('gate').style.display = 'none';
+  const overlay = document.getElementById('unlocking');
+  overlay.classList.add('show');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    document.getElementById('gallery').classList.add('show');
+    renderPhoto();
+  }, 1500);
+}
+
+// gallery logic
+let idx = 0;
+const imgEl = document.getElementById('photo-img');
+const capEl = document.getElementById('photo-caption');
+const counterEl = document.getElementById('counter');
+const dotsEl = document.getElementById('dots');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+MEMORIES.forEach((_, i) => {
+  const dot = document.createElement('span');
+  dot.className = 'dot' + (i===0 ? ' active' : '');
+  dotsEl.appendChild(dot);
+});
+
+function renderPhoto(){
+  const m = MEMORIES[idx];
+  imgEl.src = m.src;
+  imgEl.alt = m.caption || ("Memory " + (idx+1));
+  capEl.textContent = m.caption || "";
+  counterEl.textContent = (idx+1) + " of " + MEMORIES.length;
+  btnPrev.disabled = idx === 0;
+  btnNext.disabled = idx === MEMORIES.length - 1;
+  [...dotsEl.children].forEach((dot, i) => dot.classList.toggle('active', i === idx));
+}
+
+btnPrev.addEventListener('click', () => { if (idx>0){ idx--; renderPhoto(); } });
+btnNext.addEventListener('click', () => { if (idx<MEMORIES.length-1){ idx++; renderPhoto(); } });
+
+// swipe support
+let touchStartX = null;
+document.querySelector('.frame').addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+});
+document.querySelector('.frame').addEventListener('touchend', e => {
+  if (touchStartX === null) return;
+  const diff = e.changedTouches[0].clientX - touchStartX;
+  if (diff > 40 && idx > 0){ idx--; renderPhoto(); }
+  else if (diff < -40 && idx < MEMORIES.length-1){ idx++; renderPhoto(); }
+  touchStartX = null;
+});
+</script>
+</body>
+</html>
